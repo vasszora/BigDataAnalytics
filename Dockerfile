@@ -60,6 +60,7 @@ COPY config/yarn-site.xml /home/hduser/hadoop/etc/hadoop/yarn-site.xml
 RUN hdfs namenode -format
 # copy the spark env file
 COPY config/spark-env.sh /home/hduser/spark/conf/spark-env.sh
+COPY postgresql-42.6.0.jar /home/hduser/
 # edit spark-defaults.conf
 RUN echo "spark.master spark://localhost:7077" >> /home/hduser/spark/conf/spark-defaults.conf
 # expose ports

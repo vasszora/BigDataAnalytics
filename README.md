@@ -142,6 +142,88 @@ df.show()
 df = spark.read.csv('/home/hduser/flight.csv', header=True)
 ```
 
+## Connect with a Postgresql container
+
+- Add a new service to the docker-compose.yml file
+```yml
+  db:
+    image: postgres:14.1-alpine
+    container_name: postgres
+    hostname: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+    volumes:
+      - db:/var/lib/postgresql/data
+```
+
+- Add volume for db
+```yml
+volumes:
+  db:
+    driver: local
+```
+- Download Postgresql driver and move it to your workspace ()
+- Copy the driver file to the container in the Dockerfile
+```Dockerfile
+COPY postgresql-42.6.0.jar /home/hduser/
+```
+- Since the Dockerfile changed, rebuild the hadoop_spark image
+```shell
+docker build -t hadoop-spark .
+```
+- You can check if the copy was successful
+```shell
+docker-compose up -d
+docker exec -it master bash
+
+hduser@master$hdfs ls
+hadoop  postgresql-42.6.0.jar  spark
+```
+
+- Add a table and some data to the database
+```sql
+docker exec -it postgres psql -U postgres
+
+postgres=# CREATE TABLE users (user_id serial PRIMARY KEY, name TEXT);
+postgres=# INSERT INTO users(name) VALUES ('Easter bunny');
+postgres=# INSERT INTO users(name) VALUES ('Santa Claus');
+```
+
+
+- Open localhost:8888 and create a new Jupyter notebook
+- Create a SparkSession, and specify the postgresql jar file with the config
+```python
+from pyspark.sql import SparkSession
+
+spark = SparkSession \
+    .builder \
+    .appName("Python Spark SQL basic example") \
+    .config("spark.jars", "/home/hduser/postgresql-42.6.0.jar") \
+    .getOrCreate()
+```
+- Read the created table from the database
+```python
+df = spark.read \
+    .format("jdbc") \
+    .option("url", "jdbc:postgresql://postgres:5432/postgres") \
+    .option("dbtable", "users") \
+    .option("user", "postgres") \
+    .option("password", "postgres") \
+    .option("driver", "org.postgresql.Driver") \
+    .load()
+```
+- Print the schema
+```python
+df.printSchema()
+
+root
+ |-- user_id: integer (nullable = true)
+ |-- name: string (nullable = true)
+```
+
 ## Jupyter notebook and vscode
 
 You can connect the jupyter notebook and vscode to the master node. To do this please follow the following steps:
