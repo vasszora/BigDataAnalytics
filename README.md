@@ -224,6 +224,49 @@ root
  |-- name: string (nullable = true)
 ```
 
+## Connect with a MongoDB container
+- Build hadoop_spark image
+```shell
+docker build -t hadoop-spark .
+```
+- Start the containers
+```shell
+docker-compose up -d
+```
+- Add a table and some data to the database
+```sql
+docker exec -it mongodb mongosh -u user -p pass
+
+test> db.createCollection("users")
+test> db.users.insert({"name":"Santa Claus"})
+```
+
+- Open localhost:8888 and create a new Jupyter notebook
+- Create a SparkSession with configurations added for the connection with MongoDb
+```python
+from pyspark.sql import SparkSession
+
+spark = SparkSession \
+    .builder \
+    .appName("Python Spark SQL basic example") \
+    .config("spark.mongodb.read.connection.uri", "mongodb://user:pass@mongodb") \
+    .config("spark.mongodb.read.collection", "users") \
+    .config("spark.mongodb.read.database", "test") \
+    .getOrCreate()
+  
+df = spark.read.format("mongodb") \
+    .option("user", "user") \
+    .option("password", "pass") \
+    .load()
+  
+df.printSchema()
+
+root
+ |-- _id: string (nullable = true)
+ |-- name: string (nullable = true)
+ 
+```
+
 ## Jupyter notebook and vscode
 
 You can connect the jupyter notebook and vscode to the master node. To do this please follow the following steps:

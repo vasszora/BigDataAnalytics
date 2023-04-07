@@ -16,6 +16,7 @@ services:
     stdin_open: true
     depends_on:
       - db
+      - mongodb
     networks:
       - cluster
     ports:
@@ -37,10 +38,23 @@ services:
       - db:/var/lib/postgresql/data
     networks:
       - cluster
+  mongodb:
+    image: mongodb/mongodb-community-server:6.0-ubi8
+    environment:
+      - MONGODB_INITDB_ROOT_USERNAME=user
+      - MONGODB_INITDB_ROOT_PASSWORD=pass
+    container_name: mongodb
+    hostname: mongodb
+    ports:
+      - "27017:27017"
+    networks:
+      - cluster
 networks:
   cluster:
     name: hadoop-spark-net
     driver: bridge
 volumes:
   db:
+    driver: local
+  mongodb:
     driver: local
