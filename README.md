@@ -157,6 +157,7 @@ df = spark.read.csv('/home/hduser/flight.csv', header=True)
       - POSTGRES_USER=postgres
     volumes:
       - db:/var/lib/postgresql/data
+      - ./sql/create_tables.sql:/docker-entrypoint-initdb.d/create_tables.sql
 ```
 
 - Add volume for db
@@ -165,33 +166,24 @@ volumes:
   db:
     driver: local
 ```
+
+- Add a table and some data to the database in the sql/create_tables.sql file
+```sql
+CREATE TABLE users (user_id serial PRIMARY KEY, name TEXT);
+INSERT INTO users(name) VALUES ('Easter bunny');
+INSERT INTO users(name) VALUES ('Santa Claus');
+```
+
+
 - Download Postgresql driver and move it to your workspace ()
 - Copy the driver file to the container in the Dockerfile
 ```Dockerfile
-COPY postgresql-42.6.0.jar /home/hduser/
+COPY packages/postgresql-42.6.0.jar /home/hduser/
 ```
 - Since the Dockerfile changed, rebuild the hadoop_spark image
 ```shell
 docker build -t hadoop-spark .
 ```
-- You can check if the copy was successful
-```shell
-docker-compose up -d
-docker exec -it master bash
-
-hduser@master$hdfs ls
-hadoop  postgresql-42.6.0.jar  spark
-```
-
-- Add a table and some data to the database
-```sql
-docker exec -it postgres psql -U postgres
-
-postgres=# CREATE TABLE users (user_id serial PRIMARY KEY, name TEXT);
-postgres=# INSERT INTO users(name) VALUES ('Easter bunny');
-postgres=# INSERT INTO users(name) VALUES ('Santa Claus');
-```
-
 
 - Open localhost:8888 and create a new Jupyter notebook
 - Create a SparkSession, and specify the postgresql jar file with the config
@@ -201,7 +193,6 @@ from pyspark.sql import SparkSession
 spark = SparkSession \
     .builder \
     .appName("Python Spark SQL basic example") \
-    .config("spark.jars", "/home/hduser/postgresql-42.6.0.jar") \
     .getOrCreate()
 ```
 - Read the created table from the database

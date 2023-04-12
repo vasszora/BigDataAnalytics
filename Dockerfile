@@ -60,11 +60,13 @@ COPY config/yarn-site.xml /home/hduser/hadoop/etc/hadoop/yarn-site.xml
 RUN hdfs namenode -format
 # copy the spark env file
 COPY config/spark-env.sh /home/hduser/spark/conf/spark-env.sh
-COPY postgresql-42.6.0.jar /home/hduser/spark/jars
-COPY mongo-spark-connector_2.12-10.1.1.jar /home/hduser/spark/jars
-COPY bson-4.8.1.jar /home/hduser/spark/jars/
-COPY mongodb-driver-core-4.8.1.jar /home/hduser/spark/jars/
-COPY mongodb-driver-sync-4.8.1.jar /home/hduser/spark/jars/
+COPY packages/postgresql-42.6.0.jar /home/hduser/spark/jars
+COPY packages/mongo-spark-connector_2.12-10.1.1.jar /home/hduser/spark/jars
+COPY packages/bson-4.8.1.jar /home/hduser/spark/jars/
+COPY packages/mongodb-driver-core-4.8.1.jar /home/hduser/spark/jars/
+COPY packages/mongodb-driver-sync-4.8.1.jar /home/hduser/spark/jars/
+
+COPY labs/assignment.ipynb /home/hduser/assignment.ipynb
 # edit spark-defaults.conf
 RUN echo "spark.master spark://localhost:7077" >> /home/hduser/spark/conf/spark-defaults.conf
 # expose ports
